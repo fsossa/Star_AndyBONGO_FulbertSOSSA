@@ -4,13 +4,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import fr.istic.mob.starbs.data.local.entities.StopTime
+import fr.istic.mob.starbs.data.local.entities.Calendar
 
 @Dao
-interface StopTimeDao {
+interface CalendarDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(stopTimes: List<StopTime>)
+    suspend fun insertAll(calendars: List<Calendar>)
 
-    @Query("SELECT * FROM stop_time WHERE trip_id = :tripId ORDER BY stop_sequence")
-    suspend fun getForTrip(tripId: String): List<StopTime>
+    @Query("SELECT * FROM calendar WHERE service_id = :id")
+    suspend fun get(id: String): Calendar?
 }

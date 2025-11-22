@@ -27,6 +27,10 @@ android {
             )
         }
     }
+    buildFeatures {
+        viewBinding = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -50,4 +54,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
 }

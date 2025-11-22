@@ -1,6 +1,8 @@
 package fr.istic.mob.starbs
 
 import android.app.Application
+import fr.istic.mob.starbs.data.local.AppDatabase
+import fr.istic.mob.starbs.data.repository.GTFSRepository
 
 class MainApp : Application() {
 
