@@ -8,6 +8,9 @@ import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.data.local.entities.*
 import fr.istic.mob.starbs.utils.NotificationUtils
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.zip.ZipFile
 
 class GTFSParserService : IntentService("GTFSParserService") {
@@ -27,30 +30,42 @@ class GTFSParserService : IntentService("GTFSParserService") {
             this, "Parsing GTFS", "Décompression en cours…", 3
         )
 
-        try {
-            zipFile.entries().asSequence().forEach { entry ->
-                val name = entry.name.lowercase()
+        CoroutineScope(Dispatchers.IO).launch {
 
-                val content = zipFile.getInputStream(entry).bufferedReader().readLines()
+            try {
+                zipFile.entries().asSequence().forEach { entry ->
+                    val name = entry.name.lowercase()
 
-                when {
-                    name.contains("routes") -> parseRoutes(content)
-                    name.contains("trips") -> parseTrips(content)
-                    name.contains("stops") -> parseStops(content)
-                    name.contains("stop_times") -> parseStopTimes(content)
-                    name.contains("calendar") -> parseCalendar(content)
+                    val content = zipFile.getInputStream(entry)
+                        .bufferedReader()
+                        .readLines()
+
+                    when {
+                        name.contains("routes") -> parseRoutes(content)
+                        name.contains("trips") -> parseTrips(content)
+                        name.contains("stops") -> parseStops(content)
+                        name.contains("stop_times") -> parseStopTimes(content)
+                        name.contains("calendar") -> parseCalendar(content)
+                    }
                 }
+
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "GTFS prêt",
+                    "Base mise à jour",
+                    4
+                )
+
+            } catch (e: Exception) {
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Erreur parsing",
+                    e.message ?: "Erreur inconnue",
+                    98
+                )
             }
-
-            NotificationUtils.notify(
-                this, "GTFS prêt", "Base mise à jour", 4
-            )
-
-        } catch (e: Exception) {
-            NotificationUtils.notify(
-                this, "Erreur parsing", e.message ?: "Erreur inconnue", 98
-            )
         }
+
     }
 
     private suspend fun parseRoutes(lines: List<String>) {

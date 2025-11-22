@@ -16,7 +16,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
 
         NotificationUtils.createChannel(this)
 
-        val url = "https://data.explore.star.fr/explore/dataset/tco-busval-gtfs-versions/files/"
+        val url = "https://data.explore.star.fr/explore/dataset/tco-busmetro-horaires-gtfs-versions-td/export/"
 
         val outputFile = File(cacheDir, "gtfs.zip")
 
