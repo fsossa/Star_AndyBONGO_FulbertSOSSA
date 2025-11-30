@@ -7,67 +7,92 @@ import androidx.annotation.RequiresPermission
 import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.data.local.entities.*
 import fr.istic.mob.starbs.utils.NotificationUtils
-import java.io.File
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.util.zip.ZipFile
 
 class GTFSParserService : IntentService("GTFSParserService") {
 
+    companion object {
+        const val ACTION_PROGRESS = "fr.istic.mob.starbs.GTFS_PROGRESS"
+        const val EXTRA_PERCENT = "percent"
+        const val EXTRA_MESSAGE = "message"
+    }
+
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onHandleIntent(intent: Intent?) {
+
         NotificationUtils.createChannel(this)
 
         val zipPath = intent?.getStringExtra("zip_path") ?: return
         val zipFile = ZipFile(zipPath)
 
-        val db = MainApp.database
+        sendProgress(0, "Début du parsing…")
 
+        val db = MainApp.database
         db.clearAllTables()
 
-        NotificationUtils.notify(
-            this, "Parsing GTFS", "Décompression en cours…", 3
-        )
+        // Lancement du parsing en coroutine IO
+        kotlinx.coroutines.runBlocking {
 
-        CoroutineScope(Dispatchers.IO).launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
 
-            try {
-                zipFile.entries().asSequence().forEach { entry ->
-                    val name = entry.name.lowercase()
+                try {
+                    var routesLines: List<String>? = null
+                    var tripsLines: List<String>? = null
+                    var stopsLines: List<String>? = null
+                    var stopTimesLines: List<String>? = null
+                    var calendarLines: List<String>? = null
 
-                    val content = zipFile.getInputStream(entry)
-                        .bufferedReader()
-                        .readLines()
+                    zipFile.entries().asSequence().forEach { entry ->
+                        val name = entry.name.lowercase()
+                        val content = zipFile.getInputStream(entry).bufferedReader().readLines()
 
-                    when {
-                        name.contains("routes") -> parseRoutes(content)
-                        name.contains("trips") -> parseTrips(content)
-                        name.contains("stops") -> parseStops(content)
-                        name.contains("stop_times") -> parseStopTimes(content)
-                        name.contains("calendar") -> parseCalendar(content)
+                        when {
+                            name.contains("routes") -> routesLines = content
+                            name.contains("trips") -> tripsLines = content
+                            name.contains("stops") && !name.contains("stop_times") -> stopsLines = content
+                            name.contains("stop_times") -> stopTimesLines = content
+                            name.contains("calendar") -> calendarLines = content
+                        }
                     }
+
+                    // APPELS SUSPEND → maintenant OK
+                    routesLines?.let { parseRoutes(it) }
+                    sendProgress(20, "Routes ✔")
+
+                    tripsLines?.let { parseTrips(it) }
+                    sendProgress(40, "Trips ✔")
+
+                    stopsLines?.let { parseStops(it) }
+                    sendProgress(60, "Stops ✔")
+
+                    stopTimesLines?.let { parseStopTimes(it) }
+                    sendProgress(80, "Stop Times ✔")
+
+                    calendarLines?.let { parseCalendar(it) }
+                    sendProgress(100, "Calendrier ✔")
+
+                } catch (e: Exception) {
+                    NotificationUtils.notify(
+                        this@GTFSParserService,
+                        "Erreur parsing",
+                        "Erreur inconnue ${e.message} ",
+                        97
+                    )
                 }
-
-                NotificationUtils.notify(
-                    this@GTFSParserService,
-                    "GTFS prêt",
-                    "Base mise à jour",
-                    4
-                )
-
-            } catch (e: Exception) {
-                NotificationUtils.notify(
-                    this@GTFSParserService,
-                    "Erreur parsing",
-                    e.message ?: "Erreur inconnue",
-                    98
-                )
             }
         }
-
     }
 
+
+    private fun sendProgress(percent: Int, msg: String) {
+        val intent = Intent(ACTION_PROGRESS)
+        intent.putExtra(EXTRA_PERCENT, percent)
+        intent.putExtra(EXTRA_MESSAGE, msg)
+        sendBroadcast(intent)
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private suspend fun parseRoutes(lines: List<String>) {
         val dao = MainApp.database.routeDao()
         val routes = lines.drop(1).mapNotNull { line ->
@@ -84,9 +109,12 @@ class GTFSParserService : IntentService("GTFSParserService") {
             )
         }
         dao.insertAll(routes)
+        NotificationUtils.notify(this, "Routes", "Routes complétées", 10)
+        sendProgress(20, "Routes complétées")
     }
 
-    private suspend fun parseTrips(lines: List<String>) {
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private fun parseTrips(lines: List<String>) {
         val dao = MainApp.database.tripDao()
         val trips = lines.drop(1).mapNotNull { line ->
             val parts = line.split(',')
@@ -100,25 +128,31 @@ class GTFSParserService : IntentService("GTFSParserService") {
             )
         }
         dao.insertAll(trips)
+        NotificationUtils.notify(this, "Trips", "Voyages complétés", 11)
+        sendProgress(40, "Voyages complétés")
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private suspend fun parseStops(lines: List<String>) {
         val dao = MainApp.database.stopDao()
         val stops = lines.drop(1).mapNotNull { line ->
             val parts = line.split(',')
-            if (parts.size < 4) return@mapNotNull null
+            if (parts.size < 6) return@mapNotNull null
 
             Stop(
                 stop_id = parts[0],
                 stop_name = parts[2],
-                stop_lat = parts[4].toDouble(),
-                stop_lon = parts[5].toDouble()
+                stop_lat = parts[4].toDoubleOrNull() ?: 0.0,
+                stop_lon = parts[5].toDoubleOrNull() ?: 0.0
             )
         }
         dao.insertAll(stops)
+        NotificationUtils.notify(this, "Stops", "Arrêts complétés", 12)
+        sendProgress(60, "Arrêts complétés")
     }
 
-    private suspend fun parseStopTimes(lines: List<String>) {
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private fun parseStopTimes(lines: List<String>) {
         val dao = MainApp.database.stopTimeDao()
         val times = lines.drop(1).mapNotNull { line ->
             val p = line.split(',')
@@ -129,12 +163,15 @@ class GTFSParserService : IntentService("GTFSParserService") {
                 arrival_time = p[1],
                 departure_time = p[2],
                 stop_id = p[3],
-                stop_sequence = p[4].toInt()
+                stop_sequence = p[4].toIntOrNull() ?: 0
             )
         }
         dao.insertAll(times)
+        NotificationUtils.notify(this, "StopTimes", "Horaires complétés", 13)
+        sendProgress(80, "Horaires complétés")
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private suspend fun parseCalendar(lines: List<String>) {
         val dao = MainApp.database.calendarDao()
         val cal = lines.drop(1).mapNotNull { line ->
@@ -143,17 +180,23 @@ class GTFSParserService : IntentService("GTFSParserService") {
 
             Calendar(
                 service_id = p[0],
-                monday = p[1].toInt(),
-                tuesday = p[2].toInt(),
-                wednesday = p[3].toInt(),
-                thursday = p[4].toInt(),
-                friday = p[5].toInt(),
-                saturday = p[6].toInt(),
-                sunday = p[7].toInt(),
+                monday = p[1].toIntOrNull() ?: 0,
+                tuesday = p[2].toIntOrNull() ?: 0,
+                wednesday = p[3].toIntOrNull() ?: 0,
+                thursday = p[4].toIntOrNull() ?: 0,
+                friday = p[5].toIntOrNull() ?: 0,
+                saturday = p[6].toIntOrNull() ?: 0,
+                sunday = p[7].toIntOrNull() ?: 0,
                 start_date = p[8],
                 end_date = p[9]
             )
         }
         dao.insertAll(cal)
+        NotificationUtils.notify(this, "Calendar", "Calendrier complété", 14)
+        sendProgress(100, "Calendrier complété")
+        delay(3000)
+        NotificationUtils.notify(this, "StarBS", "Téléchargement et insertion en base réussie", 14)
+        sendProgress(101, "Téléchargement et insertion en base réussie")
+
     }
 }

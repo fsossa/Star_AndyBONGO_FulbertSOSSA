@@ -13,6 +13,10 @@ class RouteSpinnerAdapter(
     private val routes: List<Route>
 ) : ArrayAdapter<Route>(context, android.R.layout.simple_spinner_item, routes) {
 
+    init {
+        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    }
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         return styleView(super.getView(position, convertView, parent), position)
     }
@@ -25,14 +29,18 @@ class RouteSpinnerAdapter(
         val textView = view as TextView
         val r = routes[position]
 
-        // Couleur de fond
-        textView.setBackgroundColor(Color.parseColor("#${r.route_color ?: "FFFFFF"}"))
+        val bg = r.route_color ?: "FFFFFF"
+        val fg = r.route_text_color ?: "000000"
 
-        // Couleur du texte
-        val textColor = r.route_text_color ?: "000000"
-        textView.setTextColor(Color.parseColor("#$textColor"))
+        try {
+            textView.setBackgroundColor(Color.parseColor("#$bg"))
+        } catch (_: IllegalArgumentException) { }
 
-        textView.text = r.route_short_name ?: "?"
+        try {
+            textView.setTextColor(Color.parseColor("#$fg"))
+        } catch (_: IllegalArgumentException) { }
+
+        textView.text = r.route_short_name ?: r.route_long_name ?: r.route_id
 
         return textView
     }

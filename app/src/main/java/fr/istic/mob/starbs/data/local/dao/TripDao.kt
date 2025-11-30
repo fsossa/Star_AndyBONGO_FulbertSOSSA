@@ -8,9 +8,15 @@ import fr.istic.mob.starbs.data.local.entities.Trip
 
 @Dao
 interface TripDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(trips: List<Trip>)
 
-    @Query("SELECT * FROM trip WHERE route_id = :routeId")
-    suspend fun getTripsForRoute(routeId: String): List<Trip>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertAll(trips: List<Trip>)
+
+    @Query("""
+        SELECT DISTINCT trip_headsign 
+        FROM trip 
+        WHERE route_id = :routeId 
+        ORDER BY trip_headsign
+    """)
+    suspend fun getDirectionsForRoute(routeId: String): List<String>
 }

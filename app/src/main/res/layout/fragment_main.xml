@@ -6,26 +6,82 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ProgressBar
+        android:id="@+id/progress_circle"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:indeterminate="true"
+        android:visibility="gone"
+        android:padding="16dp"/>
+
+    <!-- Barre de progression pendant parsing -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/progressText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:visibility="gone"
+        android:padding="8dp" />
+
+    <!-- DATE + HEURE -->
+    <TextView
+        android:id="@+id/textSelectedDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date sélectionnée : --/--/----"
+        android:paddingTop="12dp" />
+
+    <Button
+        android:id="@+id/buttonChooseDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choisir la date" />
+
+    <TextView
+        android:id="@+id/textSelectedTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Heure choisie : --:--"
+        android:paddingTop="12dp" />
+
+    <Button
+        android:id="@+id/buttonChooseTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choisir l'heure" />
+
+    <!-- Lignes de bus -->
     <Spinner
         android:id="@+id/spinner_routes"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:paddingTop="12dp" />
 
+    <!-- Directions -->
     <ListView
         android:id="@+id/list_directions"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:paddingTop="8dp" />
 
-    <DatePicker
-        android:id="@+id/date_picker"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
+    <!-- Horaires -->
     <ListView
         android:id="@+id/list_times"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:paddingTop="8dp" />
 
 </LinearLayout>

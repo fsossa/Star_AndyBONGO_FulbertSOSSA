@@ -12,7 +12,7 @@ import fr.istic.mob.starbs.R
 
 object NotificationUtils {
 
-    const val CHANNEL_ID = "GTFS_CHANNEL"
+    private const val CHANNEL_ID = "GTFS_CHANNEL"
 
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -28,13 +28,18 @@ object NotificationUtils {
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun notify(context: Context, title: String, message: String, id: Int) {
+
+        NotificationManagerCompat.from(context).cancelAll()
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
-            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message)) // AFFICHE PLUSIEURS LIGNES
+            .setContentText(message.take(40)) // texte abrégé
             .setAutoCancel(true)
             .build()
 
         NotificationManagerCompat.from(context).notify(id, notification)
     }
+
 }

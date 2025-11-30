@@ -15,7 +15,8 @@ import fr.istic.mob.starbs.data.local.entities.*
         StopTime::class,
         Calendar::class
     ],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -33,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                 Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "gtfs.db"
+                    "gtfs_star.db"
                 ).build().also { INSTANCE = it }
             }
         }

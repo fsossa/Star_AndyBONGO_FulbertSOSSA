@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">StarBS</string>
-    <string name="open_drawer">Ouvrir menu</string>
-    <string name="close_drawer">Fermer menu</string>
-
+    <string name="open_drawer">Ouvrir le menu</string>
+    <string name="close_drawer">Fermer le menu</string>
 </resources>
