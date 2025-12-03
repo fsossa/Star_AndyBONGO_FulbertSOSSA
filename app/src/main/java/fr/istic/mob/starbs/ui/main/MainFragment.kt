@@ -70,7 +70,7 @@ class MainFragment : Fragment() {
     }
 
     // -------------------------------------------------------
-    // 🚌 Charger les lignes de bus (appel Repository suspend)
+    // Charger les lignes de bus (appel Repository suspend)
     // -------------------------------------------------------
     private fun loadRoutes() {
         val repo = MainApp.repository
@@ -90,7 +90,7 @@ class MainFragment : Fragment() {
     }
 
     // -------------------------------------------------------
-    // 🔄 Charger les directions de la ligne sélectionnée
+    // Charger les directions de la ligne sélectionnée
     // -------------------------------------------------------
     private fun loadDirections(routeId: String) {
         val repo = MainApp.repository

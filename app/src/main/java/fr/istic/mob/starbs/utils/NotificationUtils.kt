@@ -18,7 +18,7 @@ object NotificationUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "GTFS updates",
+                "Data updates",
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             val manager = context.getSystemService(NotificationManager::class.java)

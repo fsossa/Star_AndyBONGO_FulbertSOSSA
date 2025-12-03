@@ -79,7 +79,7 @@ class GTFSParserService : IntentService("GTFSParserService") {
 
                 NotificationUtils.notify(
                     this@GTFSParserService,
-                    "GTFS prêt",
+                    "Données prête",
                     "Base de données mise à jour",
                     6
                 )

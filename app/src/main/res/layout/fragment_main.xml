@@ -25,7 +25,7 @@
                     android:id="@+id/textDateTimeTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Date et Heure"
+                    android:text="@string/date_et_heure"
                     android:textStyle="bold"
                     android:textSize="18sp"
                     android:paddingBottom="8dp" />
@@ -40,13 +40,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sélectionner la date" />
+                        android:text="@string/s_lectionner_la_date" />
 
                     <Button
                         android:id="@+id/buttonSelectDate"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Choisir une date" />
+                        android:text="@string/choisir_une_date" />
                 </LinearLayout>
 
                 <!-- Sélecteur d'heure -->
@@ -58,13 +58,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sélectionner l'heure" />
+                        android:text="@string/s_lectionner_l_heure" />
 
                     <Button
                         android:id="@+id/buttonSelectTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Choisir l'heure" />
+                        android:text="@string/choisir_l_heure" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -86,7 +86,7 @@
                     android:id="@+id/textRouteTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ligne de bus"
+                    android:text="@string/ligne_de_bus"
                     android:textStyle="bold"
                     android:textSize="18sp"
                     android:paddingBottom="8dp" />
@@ -94,7 +94,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sélectionnez une ligne" />
+                    android:text="@string/s_lectionnez_une_ligne" />
 
                 <Spinner
                     android:id="@+id/spinnerRoutes"

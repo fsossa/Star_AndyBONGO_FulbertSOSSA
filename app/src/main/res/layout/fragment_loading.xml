@@ -10,7 +10,7 @@
         android:id="@+id/textLoadingTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Remplissage de la base de données en cours..."
+        android:text="@string/remplissage_de_la_base_de_donn_es_en_cours"
         android:textSize="18sp"
         android:textStyle="bold"
         android:paddingBottom="24dp" />
@@ -45,7 +45,7 @@
         android:id="@+id/textLoadingSubtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Initialisation..."
+        android:text="@string/initialisation"
         android:paddingTop="16dp" />
 
 </LinearLayout>

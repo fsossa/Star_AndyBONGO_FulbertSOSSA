@@ -52,7 +52,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
 
             if (!needUpdate) {
                 // Base déjà à jour
-                sendProgress(100, "GTFS déjà à jour ✔")
+                sendProgress(100, "Données déjà à jour ✔")
                 // NotificationUtils.notify(this, "GTFS", "Déjà à jour ✔", 2)
                 return
             }
@@ -74,7 +74,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
 
             NotificationUtils.notify(
                 this,
-                "GTFS téléchargé",
+                "Données téléchargé",
                 "Début de l’analyse…",
                 3
             )

@@ -3,12 +3,12 @@
 
     <item
         android:id="@+id/menu_reload"
-        android:title="Recharger les données"
+        android:title="@string/recharger_les_donn_es"
         android:icon="@android:drawable/ic_menu_rotate" />
 
     <item
         android:id="@+id/menu_about"
-        android:title="À propos"
+        android:title="@string/propos"
         android:icon="@android:drawable/ic_menu_info_details" />
 
 </menu>
