@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-<!--    <item-->
-<!--        android:id="@+id/menu_update_gtfs"-->
-<!--        android:title="Télécharger GTFS" />-->
+    <item
+        android:id="@+id/menu_reload"
+        android:title="Recharger les données"
+        android:icon="@android:drawable/ic_menu_rotate" />
 
     <item
-        android:id="@+id/menu_reset_db"
-        android:title="Réinitialiser la base" />
-
-    <item
-        android:id="@+id/menu_quit"
-        android:title="Quitter" />
+        android:id="@+id/menu_about"
+        android:title="À propos"
+        android:icon="@android:drawable/ic_menu_info_details" />
 
 </menu>

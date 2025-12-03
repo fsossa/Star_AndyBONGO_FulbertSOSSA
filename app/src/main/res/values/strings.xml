@@ -10,5 +10,8 @@
     <string name="button_choose_time">Choisir l\'heure</string>
     <string name="text_selected_date">Date sélectionnée : --/--/----</string>
     <string name="text_selected_time">Heure choisie : --:--</string>
+    <string name="menu_reload">Recharger les données</string>
+    <string name="menu_about">À propos</string>
+
 
 </resources>

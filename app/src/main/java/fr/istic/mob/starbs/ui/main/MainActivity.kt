@@ -1,158 +1,109 @@
 package fr.istic.mob.starbs.ui.main
 
-import android.Manifest
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.core.view.GravityCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.navigation.NavigationView
+import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.ActivityMainBinding
-import fr.istic.mob.starbs.services.GTFSParserService
+import fr.istic.mob.starbs.services.GTFSDownloaderService
 import fr.istic.mob.starbs.ui.loading.LoadingFragment
-import kotlinx.coroutines.Dispatchers
+import fr.istic.mob.starbs.utils.GTFSConstants
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: MainViewModel
-    private lateinit var drawerToggle: ActionBarDrawerToggle
-
-    private val gtfsReceiver = object : android.content.BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val percent = intent.getIntExtra(GTFSParserService.EXTRA_PERCENT, 0)
-            val msg = intent.getStringExtra(GTFSParserService.EXTRA_MESSAGE) ?: ""
-            viewModel.updateProgress(percent, msg)
-        }
-    }
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        // Permission notifications
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 10)
-        }
-
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Toolbar
         setSupportActionBar(binding.toolbar)
+        binding.toolbar.setNavigationOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
 
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        // Menu du Drawer
+        binding.navigationView.setNavigationItemSelectedListener(navListener)
 
-        setupDrawer()
-        setupMenuActions()
+        // Observer quand la base est prête
+        viewModel.isReady.observe(this) {
+            if (it) showMainFragment()
+        }
 
-        // -------------------------------
-        //   LANCEMENT ASYNCHRONE
-        // -------------------------------
+        // Charger l’écran de chargement
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, LoadingFragment())
+            .commit()
+
+        // Démarrer les services
+        startDownload()
+    }
+
+    private val navListener = NavigationView.OnNavigationItemSelectedListener { item ->
+        when (item.itemId) {
+            R.id.menu_reload -> {
+                forceReload()
+            }
+        }
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
+        true
+    }
+
+    private fun forceReload() {
+
+        // 1. Supprimer le JSON local
+        val jsonFile = File(filesDir, GTFSConstants.LOCAL_JSON_FILE)
+        if (jsonFile.exists()) jsonFile.delete()
+
+        // 2. Supprimer l'ancien ZIP si tu l'utilises
+        val zipFile = File(filesDir, "gtfs.zip")
+        if (zipFile.exists()) zipFile.delete()
+
+        // 3. Vider la base
         lifecycleScope.launch {
-            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-            val firstLaunch = prefs.getBoolean("first_launch", true)
+            MainApp.repository.clearDatabase()
 
-            if (firstLaunch) {
-                showLoadingScreen()
-                viewModel.downloadGTFS(this@MainActivity)
-                prefs.edit().putBoolean("first_launch", false).apply()
-                return@launch
-            }
-
-            // Vérifie la base hors UI thread
-            val baseReady = withContext(Dispatchers.IO) {
-                viewModel.isDatabaseReady()
-            }
-
-            if (!baseReady) {
-                showLoadingScreen()
-                viewModel.downloadGTFS(this@MainActivity)
-                return@launch
-            }
-
-            // Base prête → affichage direct
-            showMainScreen()
-
-            // Vérifier si mise à jour nécessaire
-            viewModel.autoUpdateGTFS(this@MainActivity)
+            // 4. Lancer un nouveau téléchargement
+            showLoadingFragment()
+            startDownload()
         }
     }
 
-    private fun showLoadingScreen() {
+
+    private fun startDownload() {
+        val intent = Intent(this, GTFSDownloaderService::class.java)
+        startService(intent)
+    }
+
+    private fun showMainFragment() {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, LoadingFragment())
-            .commitAllowingStateLoss()
+            .replace(R.id.fragmentContainer, MainFragment())
+            .commit()
     }
-
-    private fun showMainScreen() {
+    private fun showLoadingFragment() {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, MainFragment())
-            .commitAllowingStateLoss()
+            .replace(R.id.fragmentContainer, LoadingFragment())
+            .commit()
     }
 
-    private fun setupDrawer() {
-        drawerToggle = ActionBarDrawerToggle(
-            this,
-            binding.drawerLayout,
-            binding.toolbar,
-            R.string.open_drawer,
-            R.string.close_drawer
-        )
-        binding.drawerLayout.addDrawerListener(drawerToggle)
-        drawerToggle.syncState()
+    override fun onStart() {
+        super.onStart()
+        viewModel.registerReceiver()
     }
 
-    private fun setupMenuActions() {
-        binding.navView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-
-//                R.id.menu_update_gtfs -> {
-//                    showLoadingScreen()
-//                    viewModel.downloadGTFS(this)
-//                }
-
-                R.id.menu_reset_db -> {
-                    lifecycleScope.launch {
-                        viewModel.resetDatabase()
-                        showLoadingScreen()
-                        viewModel.downloadGTFS(this@MainActivity)
-                    }
-                }
-
-                R.id.menu_quit -> finish()
-            }
-
-            binding.drawerLayout.closeDrawer(binding.navView)
-            true
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val filter = IntentFilter(GTFSParserService.ACTION_PROGRESS)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                gtfsReceiver,
-                filter,
-                Context.RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            registerReceiver(gtfsReceiver, filter)
-        }
-    }
-
-    override fun onPause() {
-        unregisterReceiver(gtfsReceiver)
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
+        viewModel.unregisterReceiver()
     }
 }

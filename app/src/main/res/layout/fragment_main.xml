@@ -1,82 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
-    <!-- Message + donut pendant le téléchargement -->
-    <TextView
-        android:id="@+id/progressText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:visibility="gone"
-        android:paddingBottom="8dp" />
-
-<!--    <ProgressBar-->
-<!--        android:id="@+id/progress_circle"-->
-<!--        style="@android:style/Widget.ProgressBar.Large"-->
-<!--        android:layout_width="150dp"-->
-<!--        android:layout_height="150dp"-->
-<!--        android:layout_gravity="center_horizontal"-->
-<!--        android:indeterminate="false"-->
-<!--        android:max="100"-->
-<!--        android:progress="0"-->
-<!--        android:progressDrawable="@drawable/progress_donut"-->
-<!--        android:visibility="gone"-->
-<!--        android:padding="16dp"/>-->
-
-    <!-- DATE -->
-    <TextView
-        android:id="@+id/textSelectedDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Date sélectionnée : --/--/----"
-        android:paddingTop="12dp" />
-
-    <Button
-        android:id="@+id/buttonChooseDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Choisir une date" />
-
-    <!-- HEURE -->
-    <TextView
-        android:id="@+id/textSelectedTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Heure choisie : --:--"
-        android:paddingTop="12dp" />
-
-    <Button
-        android:id="@+id/buttonChooseTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Choisir l'heure" />
-
-    <!-- Lignes de bus -->
-    <Spinner
-        android:id="@+id/spinnerRoutes"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="12dp" />
+        android:orientation="vertical">
 
-    <!-- Directions -->
-    <ListView
-        android:id="@+id/listDirections"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="8dp" />
+        <!-- Carte Date & Heure -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:padding="16dp">
 
-    <!-- Horaires -->
-    <ListView
-        android:id="@+id/listTimes"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingTop="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/textDateTimeTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Date et Heure"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingBottom="8dp" />
+
+                <!-- Sélecteur de date -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sélectionner la date" />
+
+                    <Button
+                        android:id="@+id/buttonSelectDate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Choisir une date" />
+                </LinearLayout>
+
+                <!-- Sélecteur d'heure -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sélectionner l'heure" />
+
+                    <Button
+                        android:id="@+id/buttonSelectTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Choisir l'heure" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Carte Ligne de bus -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textRouteTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ligne de bus"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:paddingBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sélectionnez une ligne" />
+
+                <Spinner
+                    android:id="@+id/spinnerRoutes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Liste des directions (on l’utilisera plus tard) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerDirections"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

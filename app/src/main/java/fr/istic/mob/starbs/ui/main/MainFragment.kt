@@ -3,26 +3,20 @@ package fr.istic.mob.starbs.ui.main
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ArrayAdapter
+import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import fr.istic.mob.starbs.data.local.entities.Route
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.databinding.FragmentMainBinding
+import fr.istic.mob.starbs.ui.components.setOnItemSelectedListener
+import kotlinx.coroutines.launch
+import java.util.*
 
 class MainFragment : Fragment() {
 
     private lateinit var binding: FragmentMainBinding
-    private lateinit var viewModel: MainViewModel
-
-    private var selectedRoute: Route? = null
-    private var selectedDirection: String? = null
-    private var selectedDate: String = "20240101"
-
-    private var selectedTime: String = "00:00"
-
+    private val viewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,118 +24,81 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentMainBinding.inflate(inflater, container, false)
-        viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-
-        setupObservers()
-        setupListeners()
-
         return binding.root
     }
 
-    private fun setupObservers() {
-        viewModel.routes.observe(viewLifecycleOwner) { list ->
-            val adapter = RouteSpinnerAdapter(requireContext(), list)
-            binding.spinnerRoutes.adapter = adapter
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        viewModel.directions.observe(viewLifecycleOwner) { dirs ->
-            binding.listDirections.adapter =
-                ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, dirs)
-        }
-
-        viewModel.times.observe(viewLifecycleOwner) { times ->
-            binding.listTimes.adapter =
-                ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, times)
-        }
-
-//        viewModel.progress.observe(viewLifecycleOwner) { (percent, msg) ->
-//            if (percent in 1..99) {
-//                binding.progressText.visibility = View.VISIBLE
-//                binding.progressText.text = "$msg\n$percent %"
-//                binding.progressCircle.visibility = View.VISIBLE
-//                binding.progressCircle.progress = percent
-//
-//                // On désactive le reste pendant le remplissage
-//                setMainUiEnabled(false)
-//            } else {
-//                binding.progressText.visibility = View.GONE
-//                binding.progressCircle.visibility = View.GONE
-//                setMainUiEnabled(true)
-//            }
-//        }
+        setupDatePicker()
+        setupTimePicker()
+        loadRoutes()     // <---- async
     }
 
-    private fun setMainUiEnabled(enabled: Boolean) {
-        binding.buttonChooseDate.isEnabled = enabled
-        binding.buttonChooseTime.isEnabled = enabled
-        binding.spinnerRoutes.isEnabled = enabled
-        binding.listDirections.isEnabled = enabled
-        binding.listTimes.isEnabled = enabled
-    }
-
-    private fun setupListeners() {
-        // Date
-        binding.buttonChooseDate.setOnClickListener {
-            val now = java.util.Calendar.getInstance()
-            val dlg = DatePickerDialog(
+    private fun setupDatePicker() {
+        binding.buttonSelectDate.setOnClickListener {
+            val cal = Calendar.getInstance()
+            DatePickerDialog(
                 requireContext(),
                 { _, y, m, d ->
-                    selectedDate = "%04d%02d%02d".format(y, m + 1, d)
-                    binding.textSelectedDate.text =
-                        "Date sélectionnée : %02d/%02d/%04d".format(d, m + 1, y)
+                    binding.buttonSelectDate.text = "$d/${m + 1}/$y"
                 },
-                now.get(java.util.Calendar.YEAR),
-                now.get(java.util.Calendar.MONTH),
-                now.get(java.util.Calendar.DAY_OF_MONTH)
-            )
-            dlg.show()
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
+    }
 
-        // Heure
-        binding.buttonChooseTime.setOnClickListener {
-            val now = java.util.Calendar.getInstance()
-            val dlg = TimePickerDialog(
+    private fun setupTimePicker() {
+        binding.buttonSelectTime.setOnClickListener {
+            val cal = Calendar.getInstance()
+            TimePickerDialog(
                 requireContext(),
-                { _, h, min ->
-                    selectedTime = "%02d:%02d".format(h, min)
-                    binding.textSelectedTime.text =
-                        "Heure choisie : %02d:%02d".format(h, min)
+                { _, hour, min ->
+                    val h = hour.toString().padStart(2, '0')
+                    val m = min.toString().padStart(2, '0')
+                    binding.buttonSelectTime.text = "$h:$m"
                 },
-                now.get(java.util.Calendar.HOUR_OF_DAY),
-                now.get(java.util.Calendar.MINUTE),
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
                 true
-            )
-            dlg.show()
+            ).show()
         }
+    }
 
-        // Spinner routes
-        binding.spinnerRoutes.onItemSelectedListener =
-            object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: android.widget.AdapterView<*>,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    val route = viewModel.routes.value?.get(position)
-                    selectedRoute = route
-                    selectedDirection = null
-                    if (route != null) {
-                        viewModel.loadDirections(route.route_id)
-                    }
-                }
+    // -------------------------------------------------------
+    // 🚌 Charger les lignes de bus (appel Repository suspend)
+    // -------------------------------------------------------
+    private fun loadRoutes() {
+        val repo = MainApp.repository
 
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+        viewLifecycleOwner.lifecycleScope.launch {
+            val routes = repo.getAllRoutes()
+
+            val adapter = RouteSpinnerAdapter(requireContext(), routes)
+            binding.spinnerRoutes.adapter = adapter
+
+            // Quand une ligne est choisie, on chargera ses directions
+            binding.spinnerRoutes.setOnItemSelectedListener { _, _, position, _ ->
+                val route = routes[position]
+                loadDirections(route.route_id)
             }
+        }
+    }
 
-        // Liste directions
-        binding.listDirections.setOnItemClickListener { _, _, position, _ ->
-            val direction = viewModel.directions.value?.get(position)
-            val route = selectedRoute
-            selectedDirection = direction
-            if (route != null && direction != null) {
-                viewModel.loadTimes(route.route_id, direction, selectedDate, selectedTime)
-            }
+    // -------------------------------------------------------
+    // 🔄 Charger les directions de la ligne sélectionnée
+    // -------------------------------------------------------
+    private fun loadDirections(routeId: String) {
+        val repo = MainApp.repository
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val dirs = repo.getDirectionsForRoute(routeId)
+
+            // TODO : mettre dans une RecyclerView
+            // Pour l'instant : debug simple
+            println("Directions de $routeId : $dirs")
         }
     }
 }

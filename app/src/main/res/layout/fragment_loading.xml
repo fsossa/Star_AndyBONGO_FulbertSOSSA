@@ -1,39 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
-
-    <ProgressBar
-        android:id="@+id/progressCircle"
-        style="@android:style/Widget.ProgressBar.Large"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/progress_donut"
-        android:padding="16dp"/>
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
 
     <TextView
-        android:id="@+id/progressText"
+        android:id="@+id/textLoadingTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chargement…"
+        android:text="Remplissage de la base de données en cours..."
         android:textSize="18sp"
-        android:textColor="#333"
-        android:paddingTop="24dp"/>
+        android:textStyle="bold"
+        android:paddingBottom="24dp" />
 
-    <Button
-        android:id="@+id/buttonRetry"
+    <!-- Pourcentage dans un cercle -->
+    <FrameLayout
+        android:layout_width="160dp"
+        android:layout_height="160dp">
+
+        <ProgressBar
+            android:id="@+id/progressCircular"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0"
+            android:rotation="-90"
+            android:progressDrawable="@drawable/circular_progress_drawable" />
+
+        <TextView
+            android:id="@+id/textProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="0%"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/textLoadingSubtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Relancer"
-        android:visibility="gone"
-        android:paddingTop="32dp"/>
+        android:text="Initialisation..."
+        android:paddingTop="16dp" />
 
 </LinearLayout>

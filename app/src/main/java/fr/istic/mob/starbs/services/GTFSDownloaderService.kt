@@ -53,7 +53,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
             if (!needUpdate) {
                 // Base déjà à jour
                 sendProgress(100, "GTFS déjà à jour ✔")
-                NotificationUtils.notify(this, "GTFS", "Déjà à jour ✔", 2)
+                // NotificationUtils.notify(this, "GTFS", "Déjà à jour ✔", 2)
                 return
             }
 

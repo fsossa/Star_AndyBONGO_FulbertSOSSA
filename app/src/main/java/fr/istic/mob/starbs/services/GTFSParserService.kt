@@ -101,21 +101,42 @@ class GTFSParserService : IntentService("GTFSParserService") {
 
     private suspend fun parseRoutes(lines: List<String>) {
         val dao = MainApp.database.routeDao()
+        if (lines.isEmpty()) return
+
+        // Regex pour parser un CSV correctement
+        val csvSplitRegex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)".toRegex()
+
+        // Lire le header
+        val header = lines.first().split(csvSplitRegex)
+        val idxRouteId = header.indexOf("route_id")
+        val idxShort = header.indexOf("route_short_name")
+        val idxLong = header.indexOf("route_long_name")
+        val idxType = header.indexOf("route_type")
+        val idxColor = header.indexOf("route_color")
+        val idxTextColor = header.indexOf("route_text_color")
+
         val routes = lines.drop(1).mapNotNull { line ->
-            val p = line.split(',')
-            if (p.size < 6) return@mapNotNull null
+            val p = line.split(csvSplitRegex)
+
+            fun col(idx: Int): String? =
+                if (idx in p.indices) p[idx].trim().trim('"') else null
+
+            val routeId = col(idxRouteId) ?: return@mapNotNull null
 
             Route(
-                route_id = p[0],
-                route_short_name = p[2],
-                route_long_name = p[3],
-                route_type = p[4].toIntOrNull(),
-                route_color = p[5],
-                route_text_color = p.getOrNull(6)
+                route_id = routeId,
+                route_short_name = col(idxShort),
+                route_long_name = col(idxLong),
+                route_type = col(idxType)?.toIntOrNull(),
+                route_color = col(idxColor)?.replace("#", "").takeIf { !it.isNullOrBlank() },
+                route_text_color = col(idxTextColor)?.replace("#", "").takeIf { !it.isNullOrBlank() }
             )
         }
+
         dao.insertAll(routes)
     }
+
+
 
     private suspend fun parseTrips(lines: List<String>) {
         val dao = MainApp.database.tripDao()
