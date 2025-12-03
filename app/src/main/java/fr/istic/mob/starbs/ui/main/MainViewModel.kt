@@ -3,7 +3,12 @@ package fr.istic.mob.starbs.ui.main
 import android.content.Context
 import androidx.lifecycle.*
 import fr.istic.mob.starbs.MainApp
+import fr.istic.mob.starbs.utils.GTFSConstants
+import fr.istic.mob.starbs.utils.GTFSUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 class MainViewModel : ViewModel() {
 
@@ -29,6 +34,9 @@ class MainViewModel : ViewModel() {
         _progress.postValue(percent to message)
         _progressPercent.postValue(percent)
         _progressMessage.postValue(message)
+        if (percent >= 100) {
+            loadRoutes()
+        }
     }
 
     fun loadRoutes() {
@@ -45,12 +53,22 @@ class MainViewModel : ViewModel() {
 
     fun resetDatabase() {
         viewModelScope.launch {
-            MainApp.repository.clearDatabase()
-            _routes.value = emptyList()
-            _directions.value = emptyList()
-            _times.value = emptyList()
+            try {
+                MainApp.repository.clearDatabase()
+
+                // On vide les LiveData côté UI pour éviter d'afficher des vieux trucs
+                _routes.value = emptyList()
+                _directions.value = emptyList()
+                _times.value = emptyList()
+
+                // Indiquer que c'est fini
+                _progress.postValue(0 to "Base réinitialisée")
+            } catch (e: Exception) {
+                _progress.postValue(0 to "Erreur reset: ${e.message}")
+            }
         }
     }
+
 
     fun downloadGTFS(context: Context) {
         val intent = android.content.Intent(
@@ -65,4 +83,37 @@ class MainViewModel : ViewModel() {
             _times.value = MainApp.repository.getHoraires(routeId, direction, date, time)
         }
     }
+
+    fun autoUpdateGTFS(context: Context) {
+        viewModelScope.launch {
+            val isEmpty = MainApp.repository.isDatabaseEmpty()
+
+            val localJson = GTFSUtils.loadLocalJson(
+                File(
+                    context.filesDir,
+                    GTFSConstants.LOCAL_JSON_FILE
+                )
+            )
+            val localFinValidite = GTFSUtils.extractFinValidite(localJson)
+
+            val expired = GTFSUtils.isGtfsExpired(localFinValidite)
+
+            if (isEmpty || expired) {
+                withContext(Dispatchers.Main) {
+                    _progress.value = 0 to "Téléchargement JSON…"
+                    downloadGTFS(context)
+                }
+            } else {
+                // Base prête et à jour : on charge directement les routes
+                withContext(Dispatchers.Main) {
+                    loadRoutes()
+                }
+            }
+        }
+    }
+
+    fun isDatabaseReady(): Boolean {
+        return !MainApp.repository.isDatabaseEmpty()
+    }
+
 }

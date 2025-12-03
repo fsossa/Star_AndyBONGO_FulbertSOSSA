@@ -10,9 +10,14 @@ import android.os.Bundle
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.ActivityMainBinding
 import fr.istic.mob.starbs.services.GTFSParserService
+import fr.istic.mob.starbs.ui.loading.LoadingFragment
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,10 +49,60 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
+        // -------------------------------
+        //   CHOIX DU PREMIER ÉCRAN
+        // -------------------------------
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val firstLaunch = prefs.getBoolean("first_launch", true)
+
+        if (firstLaunch) {
+
+            // ➜ On montre l'écran de chargement
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, LoadingFragment())
+                .commit()
+
+            // ➜ On télécharge automatiquement
+            viewModel.downloadGTFS(this)
+
+            prefs.edit().putBoolean("first_launch", false).apply()
+
+        } else {
+
+            // Vérifier si la base est remplie
+            if (viewModel.isDatabaseReady()) {
+
+                // ✔ Base OK → directement écran principal
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, MainFragment())
+                    .commit()
+
+                // Vérifier si mise à jour nécessaire
+                viewModel.autoUpdateGTFS(this)
+
+            } else {
+
+                // Base vide → écran de chargement
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, LoadingFragment())
+                    .commit()
+
+                viewModel.downloadGTFS(this)
+            }
+        }
+
+        // Drawer/menu après avoir choisi l'écran
         setupDrawer()
         setupMenuActions()
-        setupFragment()
+
+        // Message éventuel
+        viewModel.progress.observe(this) { (percent, msg) ->
+            if (msg.startsWith("Base réinitialisée")) {
+                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
 
     private fun setupDrawer() {
         drawerToggle = ActionBarDrawerToggle(
@@ -64,13 +119,19 @@ class MainActivity : AppCompatActivity() {
     private fun setupMenuActions() {
         binding.navView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.menu_download_gtfs -> {
+
+                R.id.menu_update_gtfs -> {
+                    // Télécharger / mettre à jour GTFS
                     viewModel.downloadGTFS(this)
                 }
+
                 R.id.menu_reset_db -> {
+                    // Réinitialiser la base
                     viewModel.resetDatabase()
                 }
+
                 R.id.menu_quit -> {
+                    // NE FERMER L'APP QUE ICI
                     finish()
                 }
             }
@@ -78,6 +139,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
     }
+
 
     private fun setupFragment() {
         if (supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
@@ -100,10 +162,19 @@ class MainActivity : AppCompatActivity() {
         } else {
             registerReceiver(gtfsReceiver, filter)
         }
+//        updateMenuLabel()
     }
 
     override fun onPause() {
         unregisterReceiver(gtfsReceiver)
         super.onPause()
     }
+
+//    private fun updateMenuLabel() {
+//        lifecycleScope.launch {
+//            val isEmpty = MainApp.repository.isDatabaseEmpty()
+//            val item = binding.navView.menu.findItem(R.id.menu_update_gtfs)
+//            item.title = if (isEmpty) "Télécharger GTFS" else "Mettre à jour GTFS"
+//        }
+//    }
 }

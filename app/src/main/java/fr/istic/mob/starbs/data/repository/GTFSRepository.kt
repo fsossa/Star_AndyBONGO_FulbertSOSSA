@@ -22,4 +22,8 @@ class GTFSRepository(private val db: AppDatabase) {
     suspend fun clearDatabase() {
         db.clearAllTables()
     }
+
+    fun isDatabaseEmpty(): Boolean {
+        return db.routeDao().countRoutes() == 0
+    }
 }

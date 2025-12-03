@@ -2,4 +2,13 @@
     <string name="app_name">StarBS</string>
     <string name="open_drawer">Ouvrir le menu</string>
     <string name="close_drawer">Fermer le menu</string>
+    <string name="menu_update_gtfs">Télécharger GTFS</string>
+    <string name="menu_reset_db">Réinitialiser la base</string>
+
+    <string name="menu_quit">Quitter</string>
+    <string name="button_choose_date">Choisir une date</string>
+    <string name="button_choose_time">Choisir l\'heure</string>
+    <string name="text_selected_date">Date sélectionnée : --/--/----</string>
+    <string name="text_selected_time">Heure choisie : --:--</string>
+
 </resources>

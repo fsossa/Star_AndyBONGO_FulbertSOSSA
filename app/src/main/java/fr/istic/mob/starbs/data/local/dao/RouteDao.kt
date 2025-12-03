@@ -13,4 +13,8 @@ interface RouteDao {
 
     @Query("SELECT * FROM bus_route ORDER BY route_short_name")
     suspend fun getAll(): List<Route>
+
+    @Query("SELECT COUNT(*) FROM bus_route")
+    fun countRoutes(): Int
+
 }

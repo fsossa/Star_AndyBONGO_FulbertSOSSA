@@ -11,8 +11,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import fr.istic.mob.starbs.data.local.entities.Route
 import fr.istic.mob.starbs.databinding.FragmentMainBinding
-import kotlinx.coroutines.delay
-import java.util.Calendar
 
 class MainFragment : Fragment() {
 
@@ -21,37 +19,23 @@ class MainFragment : Fragment() {
 
     private var selectedRoute: Route? = null
     private var selectedDirection: String? = null
+    private var selectedDate: String = "20240101"
 
-    private var selectedDate: String = ""   // YYYYMMDD
-    private var selectedHour: Int = 0
-    private var selectedMinute: Int = 0
+    private var selectedTime: String = "00:00"
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         binding = FragmentMainBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
-        initDefaultDate()
         setupObservers()
         setupListeners()
 
-        viewModel.loadRoutes()
-
         return binding.root
-    }
-
-    private fun initDefaultDate() {
-        val cal = Calendar.getInstance()
-        val y = cal.get(Calendar.YEAR)
-        val m = cal.get(Calendar.MONTH) + 1
-        val d = cal.get(Calendar.DAY_OF_MONTH)
-
-        selectedDate = "%04d%02d%02d".format(y, m, d)
-        binding.textSelectedDate.text = "Date sélectionnée : %02d/%02d/%04d".format(d, m, y)
     }
 
     private fun setupObservers() {
@@ -71,66 +55,66 @@ class MainFragment : Fragment() {
         }
 
         viewModel.progress.observe(viewLifecycleOwner) { (percent, msg) ->
-            if (percent in 0..99) {
-                binding.progressBar.visibility = View.VISIBLE
+            if (percent in 1..99) {
                 binding.progressText.visibility = View.VISIBLE
-                binding.progressBar.progress = percent
-                binding.progressText.text = "$percent% - $msg"
+                binding.progressText.text = "$msg\n$percent %"
                 binding.progressCircle.visibility = View.VISIBLE
-            } else {
-                binding.progressBar.visibility = View.GONE
-                binding.progressText.visibility = View.GONE
-                binding.progressCircle.visibility = View.GONE
-            }
-            if (percent >= 100) {
-                binding.progressBar.visibility = View.GONE
-                binding.progressText.visibility = View.VISIBLE
-                binding.progressText.text = "GTFS chargé ✔"
-                binding.progressCircle.visibility = View.GONE
-                binding.progressText.visibility = View.GONE
-            }
-        }
+                binding.progressCircle.progress = percent
 
-        viewModel.progressMessage.observe(viewLifecycleOwner) { msg ->
-            binding.progressText.text = msg
+                // On désactive le reste pendant le remplissage
+                setMainUiEnabled(false)
+            } else {
+                binding.progressText.visibility = View.GONE
+                binding.progressCircle.visibility = View.GONE
+                setMainUiEnabled(true)
+            }
         }
     }
 
-    private fun setupListeners() {
+    private fun setMainUiEnabled(enabled: Boolean) {
+        binding.buttonChooseDate.isEnabled = enabled
+        binding.buttonChooseTime.isEnabled = enabled
+        binding.spinnerRoutes.isEnabled = enabled
+        binding.listDirections.isEnabled = enabled
+        binding.listTimes.isEnabled = enabled
+    }
 
+    private fun setupListeners() {
+        // Date
         binding.buttonChooseDate.setOnClickListener {
-            val cal = Calendar.getInstance()
-            val dialog = DatePickerDialog(
+            val now = java.util.Calendar.getInstance()
+            val dlg = DatePickerDialog(
                 requireContext(),
-                { _, year, month, day ->
-                    selectedDate = "%04d%02d%02d".format(year, month + 1, day)
+                { _, y, m, d ->
+                    selectedDate = "%04d%02d%02d".format(y, m + 1, d)
                     binding.textSelectedDate.text =
-                        "Date sélectionnée : %02d/%02d/%04d".format(day, month + 1, year)
-                    reloadTimesIfPossible()
+                        "Date sélectionnée : %02d/%02d/%04d".format(d, m + 1, y)
                 },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
+                now.get(java.util.Calendar.YEAR),
+                now.get(java.util.Calendar.MONTH),
+                now.get(java.util.Calendar.DAY_OF_MONTH)
             )
-            dialog.show()
+            dlg.show()
         }
 
+        // Heure
         binding.buttonChooseTime.setOnClickListener {
-            val dialog = TimePickerDialog(
+            val now = java.util.Calendar.getInstance()
+            val dlg = TimePickerDialog(
                 requireContext(),
-                { _, h, m ->
-                    selectedHour = h
-                    selectedMinute = m
-                    binding.textSelectedTime.text = "Heure choisie : %02d:%02d".format(h, m)
-                    reloadTimesIfPossible()
+                { _, h, min ->
+                    selectedTime = "%02d:%02d".format(h, min)
+                    binding.textSelectedTime.text =
+                        "Heure choisie : %02d:%02d".format(h, min)
                 },
-                selectedHour,
-                selectedMinute,
+                now.get(java.util.Calendar.HOUR_OF_DAY),
+                now.get(java.util.Calendar.MINUTE),
                 true
             )
-            dialog.show()
+            dlg.show()
         }
 
+        // Spinner routes
         binding.spinnerRoutes.onItemSelectedListener =
             object : android.widget.AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
@@ -139,28 +123,25 @@ class MainFragment : Fragment() {
                     position: Int,
                     id: Long
                 ) {
-                    selectedRoute = viewModel.routes.value?.get(position)
+                    val route = viewModel.routes.value?.get(position)
+                    selectedRoute = route
                     selectedDirection = null
-                    binding.listDirections.adapter = null
-                    binding.listTimes.adapter = null
-                    selectedRoute?.let {
-                        viewModel.loadDirections(it.route_id)
+                    if (route != null) {
+                        viewModel.loadDirections(route.route_id)
                     }
                 }
 
                 override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
             }
 
+        // Liste directions
         binding.listDirections.setOnItemClickListener { _, _, position, _ ->
-            selectedDirection = viewModel.directions.value?.get(position)
-            reloadTimesIfPossible()
+            val direction = viewModel.directions.value?.get(position)
+            val route = selectedRoute
+            selectedDirection = direction
+            if (route != null && direction != null) {
+                viewModel.loadTimes(route.route_id, direction, selectedDate, selectedTime)
+            }
         }
-    }
-
-    private fun reloadTimesIfPossible() {
-        val route = selectedRoute ?: return
-        val direction = selectedDirection ?: return
-        val timeStr = "%02d:%02d:00".format(selectedHour, selectedMinute)
-        viewModel.loadTimes(route.route_id, direction, selectedDate, timeStr)
     }
 }
