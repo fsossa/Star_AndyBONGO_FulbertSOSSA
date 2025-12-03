@@ -41,7 +41,7 @@ class LoadingFragment : Fragment() {
             if (percent >= 100) {
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, fr.istic.mob.starbs.ui.main.MainFragment())
-                    .commit()
+                    .commitAllowingStateLoss()
             }
         }
 

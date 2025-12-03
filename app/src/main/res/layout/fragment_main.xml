@@ -15,18 +15,18 @@
         android:visibility="gone"
         android:paddingBottom="8dp" />
 
-    <ProgressBar
-        android:id="@+id/progress_circle"
-        style="@android:style/Widget.ProgressBar.Large"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_gravity="center_horizontal"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/progress_donut"
-        android:visibility="gone"
-        android:padding="16dp"/>
+<!--    <ProgressBar-->
+<!--        android:id="@+id/progress_circle"-->
+<!--        style="@android:style/Widget.ProgressBar.Large"-->
+<!--        android:layout_width="150dp"-->
+<!--        android:layout_height="150dp"-->
+<!--        android:layout_gravity="center_horizontal"-->
+<!--        android:indeterminate="false"-->
+<!--        android:max="100"-->
+<!--        android:progress="0"-->
+<!--        android:progressDrawable="@drawable/progress_donut"-->
+<!--        android:visibility="gone"-->
+<!--        android:padding="16dp"/>-->
 
     <!-- DATE -->
     <TextView

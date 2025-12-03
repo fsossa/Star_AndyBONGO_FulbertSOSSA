@@ -112,8 +112,9 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun isDatabaseReady(): Boolean {
-        return !MainApp.repository.isDatabaseEmpty()
-    }
+    suspend fun isDatabaseReady(): Boolean =
+        withContext(Dispatchers.IO) {
+            !MainApp.repository.isDatabaseEmpty()
+        }
 
 }

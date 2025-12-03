@@ -54,21 +54,21 @@ class MainFragment : Fragment() {
                 ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, times)
         }
 
-        viewModel.progress.observe(viewLifecycleOwner) { (percent, msg) ->
-            if (percent in 1..99) {
-                binding.progressText.visibility = View.VISIBLE
-                binding.progressText.text = "$msg\n$percent %"
-                binding.progressCircle.visibility = View.VISIBLE
-                binding.progressCircle.progress = percent
-
-                // On désactive le reste pendant le remplissage
-                setMainUiEnabled(false)
-            } else {
-                binding.progressText.visibility = View.GONE
-                binding.progressCircle.visibility = View.GONE
-                setMainUiEnabled(true)
-            }
-        }
+//        viewModel.progress.observe(viewLifecycleOwner) { (percent, msg) ->
+//            if (percent in 1..99) {
+//                binding.progressText.visibility = View.VISIBLE
+//                binding.progressText.text = "$msg\n$percent %"
+//                binding.progressCircle.visibility = View.VISIBLE
+//                binding.progressCircle.progress = percent
+//
+//                // On désactive le reste pendant le remplissage
+//                setMainUiEnabled(false)
+//            } else {
+//                binding.progressText.visibility = View.GONE
+//                binding.progressCircle.visibility = View.GONE
+//                setMainUiEnabled(true)
+//            }
+//        }
     }
 
     private fun setMainUiEnabled(enabled: Boolean) {

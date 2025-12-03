@@ -11,13 +11,13 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.ActivityMainBinding
 import fr.istic.mob.starbs.services.GTFSParserService
 import fr.istic.mob.starbs.ui.loading.LoadingFragment
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,8 +35,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
+        // Permission notifications
         if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 10)
         }
 
@@ -49,60 +51,53 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
-        // -------------------------------
-        //   CHOIX DU PREMIER ÉCRAN
-        // -------------------------------
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val firstLaunch = prefs.getBoolean("first_launch", true)
-
-        if (firstLaunch) {
-
-            // ➜ On montre l'écran de chargement
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, LoadingFragment())
-                .commit()
-
-            // ➜ On télécharge automatiquement
-            viewModel.downloadGTFS(this)
-
-            prefs.edit().putBoolean("first_launch", false).apply()
-
-        } else {
-
-            // Vérifier si la base est remplie
-            if (viewModel.isDatabaseReady()) {
-
-                // ✔ Base OK → directement écran principal
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, MainFragment())
-                    .commit()
-
-                // Vérifier si mise à jour nécessaire
-                viewModel.autoUpdateGTFS(this)
-
-            } else {
-
-                // Base vide → écran de chargement
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, LoadingFragment())
-                    .commit()
-
-                viewModel.downloadGTFS(this)
-            }
-        }
-
-        // Drawer/menu après avoir choisi l'écran
         setupDrawer()
         setupMenuActions()
 
-        // Message éventuel
-        viewModel.progress.observe(this) { (percent, msg) ->
-            if (msg.startsWith("Base réinitialisée")) {
-                android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+        // -------------------------------
+        //   LANCEMENT ASYNCHRONE
+        // -------------------------------
+        lifecycleScope.launch {
+            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            val firstLaunch = prefs.getBoolean("first_launch", true)
+
+            if (firstLaunch) {
+                showLoadingScreen()
+                viewModel.downloadGTFS(this@MainActivity)
+                prefs.edit().putBoolean("first_launch", false).apply()
+                return@launch
             }
+
+            // Vérifie la base hors UI thread
+            val baseReady = withContext(Dispatchers.IO) {
+                viewModel.isDatabaseReady()
+            }
+
+            if (!baseReady) {
+                showLoadingScreen()
+                viewModel.downloadGTFS(this@MainActivity)
+                return@launch
+            }
+
+            // Base prête → affichage direct
+            showMainScreen()
+
+            // Vérifier si mise à jour nécessaire
+            viewModel.autoUpdateGTFS(this@MainActivity)
         }
     }
 
+    private fun showLoadingScreen() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, LoadingFragment())
+            .commitAllowingStateLoss()
+    }
+
+    private fun showMainScreen() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, MainFragment())
+            .commitAllowingStateLoss()
+    }
 
     private fun setupDrawer() {
         drawerToggle = ActionBarDrawerToggle(
@@ -120,32 +115,24 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
 
-                R.id.menu_update_gtfs -> {
-                    // Télécharger / mettre à jour GTFS
-                    viewModel.downloadGTFS(this)
-                }
+//                R.id.menu_update_gtfs -> {
+//                    showLoadingScreen()
+//                    viewModel.downloadGTFS(this)
+//                }
 
                 R.id.menu_reset_db -> {
-                    // Réinitialiser la base
-                    viewModel.resetDatabase()
+                    lifecycleScope.launch {
+                        viewModel.resetDatabase()
+                        showLoadingScreen()
+                        viewModel.downloadGTFS(this@MainActivity)
+                    }
                 }
 
-                R.id.menu_quit -> {
-                    // NE FERMER L'APP QUE ICI
-                    finish()
-                }
+                R.id.menu_quit -> finish()
             }
+
             binding.drawerLayout.closeDrawer(binding.navView)
             true
-        }
-    }
-
-
-    private fun setupFragment() {
-        if (supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, MainFragment())
-                .commit()
         }
     }
 
@@ -162,19 +149,10 @@ class MainActivity : AppCompatActivity() {
         } else {
             registerReceiver(gtfsReceiver, filter)
         }
-//        updateMenuLabel()
     }
 
     override fun onPause() {
         unregisterReceiver(gtfsReceiver)
         super.onPause()
     }
-
-//    private fun updateMenuLabel() {
-//        lifecycleScope.launch {
-//            val isEmpty = MainApp.repository.isDatabaseEmpty()
-//            val item = binding.navView.menu.findItem(R.id.menu_update_gtfs)
-//            item.title = if (isEmpty) "Télécharger GTFS" else "Mettre à jour GTFS"
-//        }
-//    }
 }
