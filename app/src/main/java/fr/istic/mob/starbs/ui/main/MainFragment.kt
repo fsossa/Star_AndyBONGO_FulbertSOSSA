@@ -7,6 +7,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import fr.istic.mob.starbs.MainApp
 import fr.istic.mob.starbs.databinding.FragmentMainBinding
 import fr.istic.mob.starbs.ui.components.setOnItemSelectedListener
@@ -24,6 +25,7 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentMainBinding.inflate(inflater, container, false)
+        binding.recyclerDirections.layoutManager = LinearLayoutManager(requireContext())
         return binding.root
     }
 
@@ -94,11 +96,15 @@ class MainFragment : Fragment() {
         val repo = MainApp.repository
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val dirs = repo.getDirectionsForRoute(routeId)
+            val directions = repo.getDirectionsForRoute(routeId)
 
-            // TODO : mettre dans une RecyclerView
-            // Pour l'instant : debug simple
-            println("Directions de $routeId : $dirs")
+            val adapter = DirectionRecyclerAdapter(directions) { selectedDirection ->
+                // TODO : ouvrir l’écran des horaires pour cette direction
+                println("Direction sélectionnée : $selectedDirection")
+            }
+
+            binding.recyclerDirections.adapter = adapter
         }
     }
+
 }
