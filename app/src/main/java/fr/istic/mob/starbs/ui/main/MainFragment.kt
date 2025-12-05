@@ -4,11 +4,13 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.*
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import fr.istic.mob.starbs.MainApp
+import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.FragmentMainBinding
 import fr.istic.mob.starbs.ui.components.setOnItemSelectedListener
 import kotlinx.coroutines.launch
@@ -18,6 +20,8 @@ class MainFragment : Fragment() {
 
     private lateinit var binding: FragmentMainBinding
     private val viewModel: MainViewModel by activityViewModels()
+    private var selectedRouteId: String? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,12 +84,16 @@ class MainFragment : Fragment() {
 
             val adapter = RouteSpinnerAdapter(requireContext(), routes)
             binding.spinnerRoutes.adapter = adapter
-
             // Quand une ligne est choisie, on chargera ses directions
             binding.spinnerRoutes.setOnItemSelectedListener { _, _, position, _ ->
                 val route = routes[position]
+                selectedRouteId = route.route_id  // On stocke le vrai ID
                 loadDirections(route.route_id)
             }
+//            binding.spinnerRoutes.setOnItemSelectedListener { _, _, position, _ ->
+//                val route = routes[position]
+//                loadDirections(route.route_id)
+//            }
         }
     }
 
@@ -99,12 +107,33 @@ class MainFragment : Fragment() {
             val directions = repo.getDirectionsForRoute(routeId)
 
             val adapter = DirectionRecyclerAdapter(directions) { selectedDirection ->
-                // TODO : ouvrir l’écran des horaires pour cette direction
+                openStopsFragment(selectedDirection)
                 println("Direction sélectionnée : $selectedDirection")
             }
 
             binding.recyclerDirections.adapter = adapter
         }
     }
+
+    private fun openStopsFragment(direction: String) {
+        val fragment = StopsFragment().apply {
+            arguments = bundleOf(
+                "routeId" to selectedRouteId,   //
+                "direction" to direction
+            )
+        }
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.enter_from_right,  // fragment entrant (forward)
+                R.anim.exit_to_left,      // fragment sortant (forward)
+                R.anim.enter_from_left,   // fragment entrant (back)
+                R.anim.exit_to_right      // fragment sortant (back)
+            )
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
 
 }

@@ -41,4 +41,10 @@ class GTFSRepository(private val db: AppDatabase) {
         withContext(Dispatchers.IO) {
             db.routeDao().countRoutes() == 0 && db.tripDao().getDirectionsForRoute("1").isEmpty()
         }
+
+    suspend fun getStopsFor(routeId: String, direction: String): List<Stop> =
+        withContext(Dispatchers.IO) {
+            db.stopTimeDao().getStopsForRouteAndDirection(routeId, direction)
+        }
+
 }
