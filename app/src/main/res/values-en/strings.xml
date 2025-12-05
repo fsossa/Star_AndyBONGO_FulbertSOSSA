@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StarBS</string>
+    <string name="menu_reload">Reload data</string>
+    <string name="menu_about">About</string>
+    <string name="s_lectionnez_une_ligne">Select a line</string>
+    <string name="ligne_de_bus">Bus line</string>
+    <string name="date_et_heure">Date and Time</string>
+    <string name="s_lectionner_la_date">Select date</string>
+    <string name="choisir_une_date">Choose a date</string>
+    <string name="s_lectionner_l_heure">Select time</string>
+    <string name="choisir_l_heure">Choose a time</string>
+    <string name="recharger_les_donn_es">Reload data</string>
+    <string name="propos">About</string>
+    <string name="initialisation">Initialisation…</string>
+    <string name="remplissage_de_la_base_de_donn_es_en_cours">Filling the database in progress…</string>
+</resources>
