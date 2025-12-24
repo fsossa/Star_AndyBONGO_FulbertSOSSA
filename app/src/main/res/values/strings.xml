@@ -23,6 +23,7 @@
     <string name="propos">À propos</string>
     <string name="initialisation">Initialisation...</string>
     <string name="remplissage_de_la_base_de_donn_es_en_cours">Remplissage de la base de données en cours...</string>
+    <string name="horaires">Horaires</string>
 
 
 </resources>

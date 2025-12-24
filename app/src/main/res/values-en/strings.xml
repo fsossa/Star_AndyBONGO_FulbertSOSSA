@@ -14,4 +14,5 @@
     <string name="propos">About</string>
     <string name="initialisation">Initialisation…</string>
     <string name="remplissage_de_la_base_de_donn_es_en_cours">Filling the database in progress…</string>
+    <string name="horaires">Horaires</string>
 </resources>

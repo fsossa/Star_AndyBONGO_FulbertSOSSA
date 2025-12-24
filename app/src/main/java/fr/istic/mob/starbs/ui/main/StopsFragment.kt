@@ -9,6 +9,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import fr.istic.mob.starbs.MainApp
+import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.FragmentStopsBinding
 import kotlinx.coroutines.launch
 
@@ -40,7 +41,27 @@ class StopsFragment : Fragment() {
             binding.recyclerStops.layoutManager = LinearLayoutManager(requireContext())
 
             binding.recyclerStops.adapter = StopsAdapter(stops) { stop ->
-                // TODO: ouvrir le fragment horaires
+                val selectedDate = viewModel.selectedDate.value ?: ""
+                val selectedTime = viewModel.selectedTime.value ?: ""
+
+                val fragment = TimesFragment().apply {
+                    arguments = Bundle().apply {
+                        putString("routeId", routeId)
+                        putString("direction", direction)
+                        putString("stopId", stop.stop_id)
+                        putString("date", selectedDate)
+                        putString("time", selectedTime)
+                    }
+                }
+
+                parentFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                        R.anim.slide_in_right, R.anim.slide_out_left,
+                        R.anim.slide_in_left, R.anim.slide_out_right
+                    )
+                    .replace(R.id.fragmentContainer, fragment)
+                    .addToBackStack(null)
+                    .commit()
             }
         }
     }

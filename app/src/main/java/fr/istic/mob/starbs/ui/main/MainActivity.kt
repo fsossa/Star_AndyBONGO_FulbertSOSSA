@@ -1,8 +1,10 @@
 package fr.istic.mob.starbs.ui.main
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.lifecycleScope
@@ -97,6 +99,7 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onStart() {
         super.onStart()
         viewModel.registerReceiver()

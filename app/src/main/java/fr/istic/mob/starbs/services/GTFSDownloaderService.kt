@@ -21,6 +21,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
         sendBroadcast(intent)
     }
 
+    @Deprecated("Deprecated in Java")
     @RequiresPermission(allOf = [Manifest.permission.POST_NOTIFICATIONS])
     override fun onHandleIntent(intent: Intent?) {
 

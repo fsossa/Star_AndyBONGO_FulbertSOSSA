@@ -38,6 +38,8 @@ class MainFragment : Fragment() {
 
         setupDatePicker()
         setupTimePicker()
+        binding.buttonSelectDate.text = viewModel.selectedDate.value ?: "Choisir une date"
+        binding.buttonSelectTime.text = viewModel.selectedTime.value ?: "Choisir l'heure"
         loadRoutes()     // <---- async
     }
 
@@ -47,7 +49,10 @@ class MainFragment : Fragment() {
             DatePickerDialog(
                 requireContext(),
                 { _, y, m, d ->
-                    binding.buttonSelectDate.text = "$d/${m + 1}/$y"
+                    val date = "%02d/%02d/%04d".format(d, m + 1, y)
+                    binding.buttonSelectDate.text = date
+                    viewModel.setSelectedDate(date) //
+//                    binding.buttonSelectDate.text = "$d/${m + 1}/$y"
                 },
                 cal.get(Calendar.YEAR),
                 cal.get(Calendar.MONTH),
@@ -62,9 +67,12 @@ class MainFragment : Fragment() {
             TimePickerDialog(
                 requireContext(),
                 { _, hour, min ->
-                    val h = hour.toString().padStart(2, '0')
-                    val m = min.toString().padStart(2, '0')
-                    binding.buttonSelectTime.text = "$h:$m"
+                    val time = "%02d:%02d".format(hour, min)
+                    binding.buttonSelectTime.text = time
+                    viewModel.setSelectedTime(time)
+//                    val h = hour.toString().padStart(2, '0')
+//                    val m = min.toString().padStart(2, '0')
+//                    binding.buttonSelectTime.text = "$h:$m"
                 },
                 cal.get(Calendar.HOUR_OF_DAY),
                 cal.get(Calendar.MINUTE),
