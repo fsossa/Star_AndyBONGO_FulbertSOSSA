@@ -31,19 +31,41 @@ class TimesFragment : Fragment() {
         val routeId = requireArguments().getString(ARG_ROUTE_ID) ?: return
         val direction = requireArguments().getString(ARG_DIRECTION) ?: return
         val stopId = requireArguments().getString(ARG_STOP_ID) ?: return
+        val date = requireArguments().getString(ARG_DATE) ?: return
         val afterTime = requireArguments().getString(ARG_AFTER_TIME) ?: "00:00:00"
 
-        Log.d("DEBUG_TIMES", "routeId=$routeId direction=$direction stopId=$stopId afterTime=$afterTime")
+        val normalizedAfterTime = when (afterTime.length) {
+            5 -> "$afterTime:00"      // "HH:MM" -> "HH:MM:SS"
+            8 -> afterTime            // déjà OK
+            else -> "00:00:00"
+        }
 
         binding.recyclerTimes.layoutManager = LinearLayoutManager(requireContext())
 
+        Log.d("TIMES", "routeId: $routeId, direction: $direction, stopId: $stopId, afterTime: $normalizedAfterTime,date: $date")
         lifecycleScope.launch {
-            // ⚠️ Il faut une méthode repository qui filtre par stopId + afterTime
+            // Il faut une méthode repository qui filtre par stopId + afterTime
             val times = MainApp.repository.getTimesFor(routeId, direction, stopId, afterTime)
+            Log.d("TIMES", times.toString())
 
             binding.recyclerTimes.adapter = TimesAdapter(times) { clickedTime ->
                 // TODO plus tard: ouvrir fragment 4 (détails jusqu’au terminus)
             }
+        }
+
+
+    }
+
+    private fun normalizeDateToGtfs(input: String): String {
+        // input: "31/12/2025" -> "20251231"
+        return try {
+            val parts = input.split("/")
+            val dd = parts[0].padStart(2, '0')
+            val mm = parts[1].padStart(2, '0')
+            val yyyy = parts[2]
+            "$yyyy$mm$dd"
+        } catch (e: Exception) {
+            input // si déjà au bon format
         }
     }
 
@@ -51,6 +73,7 @@ class TimesFragment : Fragment() {
         const val ARG_ROUTE_ID = "routeId"
         const val ARG_DIRECTION = "direction"
         const val ARG_STOP_ID = "stopId"
+        const val ARG_DATE = "date"
         const val ARG_AFTER_TIME = "afterTime"
     }
 }

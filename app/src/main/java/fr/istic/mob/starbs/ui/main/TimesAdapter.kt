@@ -12,7 +12,7 @@ class TimesAdapter(
 
     inner class VH(private val binding: ItemTimeBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(time: String) {
-            binding.timeText.text = time
+            binding.textTime.text = time
             binding.root.setOnClickListener { onClick(time) }
         }
     }

@@ -22,7 +22,8 @@ object GTFSUtils {
                 val f = o.getJSONObject("fichier")
                 GTFSFile(
                     filename = f.optString("filename", null),
-                    url = f.optString("url", null),
+//                    url = f.optString("url", null),
+                    url = f.optString("url_statique", null),
                     format = f.optString("format", null)
                 )
             } else null
@@ -34,7 +35,7 @@ object GTFSUtils {
                     debutvalidite = o.getString("debutvalidite"),
                     finvalidite = o.getString("finvalidite"),
                     fichier = fichier,
-                    url = o.getString("url")
+                    url = o.getString("url_statique")
                 )
             )
         }

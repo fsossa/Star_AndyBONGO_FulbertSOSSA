@@ -54,7 +54,7 @@ class GTFSRepository(private val db: AppDatabase) {
         afterTime: String
     ): List<String> =
         withContext(Dispatchers.IO) {
-            db.stopTimeDao().getFilteredTimes(routeId, direction, stopId, afterTime)
+            db.stopTimeDao().getTimesForStopAfterTime(routeId, direction, stopId, afterTime)
         }
 
 

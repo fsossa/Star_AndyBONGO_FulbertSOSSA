@@ -50,5 +50,46 @@ interface StopTimeDao {
     ): List<Stop>
 
 
+    @Query("""
+        SELECT DISTINCT st.departure_time
+        FROM stop_times st
+        JOIN trip t ON st.trip_id = t.trip_id
+        WHERE t.route_id = :routeId
+          AND t.trip_headsign = :direction
+          AND st.stop_id = :stopId
+          AND st.departure_time >= :afterTime
+          AND st.departure_time <= :endOfDay
+        ORDER BY st.departure_time ASC
+    """)
+    suspend fun getTimesForStopAfterTime(
+        routeId: String,
+        direction: String,
+        stopId: String,
+        afterTime: String,
+        endOfDay: String = "23:59:59"
+    ): List<String>
+
+
+    @Query("""
+    SELECT st.departure_time
+    FROM stop_times st
+    JOIN trip t ON st.trip_id = t.trip_id
+    JOIN calendar c ON t.service_id = c.service_id
+    WHERE t.route_id = :routeId
+      AND t.trip_headsign = :direction
+      AND st.stop_id = :stopId
+      AND :date BETWEEN c.start_date AND c.end_date
+      AND st.departure_time >= :afterTime
+      AND st.departure_time <= :endOfDay
+    ORDER BY st.departure_time ASC
+""")
+    suspend fun getTimesForStopOnDate(
+        routeId: String,
+        direction: String,
+        stopId: String,
+        date: String,
+        afterTime: String,
+        endOfDay: String
+    ): List<String>
 
 }

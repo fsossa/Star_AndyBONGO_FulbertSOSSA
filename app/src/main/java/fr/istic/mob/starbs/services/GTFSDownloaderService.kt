@@ -89,7 +89,7 @@ class GTFSDownloaderService : IntentService("GTFSDownloaderService") {
 
         } catch (e: Exception) {
             val err = "Erreur téléchargement : ${e.message}"
-            Log.e("GTFS", err, e)
+            // Log.e("GTFS", err, e)
             sendProgress(0, err)
             NotificationUtils.notify(this, "Erreur téléchargement", err, 99)
         }

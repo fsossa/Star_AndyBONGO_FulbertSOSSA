@@ -24,6 +24,8 @@
     <string name="initialisation">Initialisation...</string>
     <string name="remplissage_de_la_base_de_donn_es_en_cours">Remplissage de la base de données en cours...</string>
     <string name="horaires">Horaires</string>
+    <string name="nom__arr">Nom de l\'arrêt</string>
+    <string name="_12_34">12:34</string>
 
 
 </resources>

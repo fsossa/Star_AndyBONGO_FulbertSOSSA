@@ -32,12 +32,10 @@ class StopsFragment : Fragment() {
 
         val routeId = requireArguments().getString("routeId")!!
         val direction = requireArguments().getString("direction")!!
-        Log.d("DEBUG_STOPS", "routeId=${routeId}, direction=${direction}")
 
 
         lifecycleScope.launch {
             val stops = MainApp.repository.getStopsFor(routeId, direction)
-            Log.d("DEBUG_STOPS", "stops=${stops}")
             binding.recyclerStops.layoutManager = LinearLayoutManager(requireContext())
 
             binding.recyclerStops.adapter = StopsAdapter(stops) { stop ->
@@ -50,14 +48,16 @@ class StopsFragment : Fragment() {
                         putString("direction", direction)
                         putString("stopId", stop.stop_id)
                         putString("date", selectedDate)
-                        putString("time", selectedTime)
+                        putString("afterTime", selectedTime)
                     }
                 }
 
                 parentFragmentManager.beginTransaction()
                     .setCustomAnimations(
-                        R.anim.slide_in_right, R.anim.slide_out_left,
-                        R.anim.slide_in_left, R.anim.slide_out_right
+                        R.anim.enter_from_right,  // fragment entrant (forward)
+                        R.anim.exit_to_left,      // fragment sortant (forward)
+                        R.anim.enter_from_left,   // fragment entrant (back)
+                        R.anim.exit_to_right      // fragment sortant (back)
                     )
                     .replace(R.id.fragmentContainer, fragment)
                     .addToBackStack(null)
