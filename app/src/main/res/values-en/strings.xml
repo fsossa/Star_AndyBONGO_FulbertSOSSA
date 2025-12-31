@@ -17,4 +17,5 @@
     <string name="horaires">Horaires</string>
     <string name="nom__arr">nom__arr</string>
     <string name="_12_34">12:34</string>
+    <string name="passages_jusqu_au_terminus">Passages jusqu’au terminus</string>
 </resources>

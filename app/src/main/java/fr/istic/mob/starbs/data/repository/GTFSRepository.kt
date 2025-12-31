@@ -2,6 +2,7 @@ package fr.istic.mob.starbs.data.repository
 
 import fr.istic.mob.starbs.data.local.AppDatabase
 import fr.istic.mob.starbs.data.local.entities.*
+import fr.istic.mob.starbs.data.models.PassageRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -56,6 +57,26 @@ class GTFSRepository(private val db: AppDatabase) {
         withContext(Dispatchers.IO) {
             db.stopTimeDao().getTimesForStopAfterTime(routeId, direction, stopId, afterTime)
         }
+
+    suspend fun getPassagesToTerminus(
+        routeId: String,
+        direction: String,
+        stopId: String,
+        clickedDepartureTime: String
+    ): List<PassageRow> =
+        withContext(Dispatchers.IO) {
+
+            val tripId = db.stopTimeDao()
+                .findTripIdForStopAndTime(routeId, direction, stopId, clickedDepartureTime)
+                ?: return@withContext emptyList()
+
+            val seq = db.stopTimeDao()
+                .getStopSequenceInTrip(tripId, stopId)
+                ?: return@withContext emptyList()
+
+            db.stopTimeDao().getPassagesFromSequence(tripId, seq)
+        }
+
 
 
 }

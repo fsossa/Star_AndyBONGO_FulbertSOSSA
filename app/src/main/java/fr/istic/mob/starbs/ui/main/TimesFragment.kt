@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import fr.istic.mob.starbs.MainApp
+import fr.istic.mob.starbs.R
 import fr.istic.mob.starbs.databinding.FragmentTimesBinding
 import kotlinx.coroutines.launch
 
@@ -50,6 +51,25 @@ class TimesFragment : Fragment() {
 
             binding.recyclerTimes.adapter = TimesAdapter(times) { clickedTime ->
                 // TODO plus tard: ouvrir fragment 4 (détails jusqu’au terminus)
+                val frag = PassagesFragment().apply {
+                    arguments = Bundle().apply {
+                        putString(PassagesFragment.ARG_ROUTE_ID, routeId)
+                        putString(PassagesFragment.ARG_DIRECTION, direction)
+                        putString(PassagesFragment.ARG_STOP_ID, stopId)
+                        putString(PassagesFragment.ARG_CLICKED_TIME, clickedTime)
+                    }
+                }
+
+                parentFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                        R.anim.enter_from_right,
+                        R.anim.exit_to_left,
+                        R.anim.enter_from_left,
+                        R.anim.exit_to_right
+                    )
+                    .replace(R.id.fragmentContainer, frag)
+                    .addToBackStack(null)
+                    .commit()
             }
         }
 

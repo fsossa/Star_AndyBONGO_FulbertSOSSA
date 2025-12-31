@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import fr.istic.mob.starbs.data.local.entities.Stop
 import fr.istic.mob.starbs.data.local.entities.StopTime
+import fr.istic.mob.starbs.data.models.PassageRow
+
 
 @Dao
 interface StopTimeDao {
@@ -91,5 +93,49 @@ interface StopTimeDao {
         afterTime: String,
         endOfDay: String
     ): List<String>
+
+    @Query("""
+        SELECT st.trip_id
+        FROM stop_times st
+        JOIN trip t ON st.trip_id = t.trip_id
+        WHERE t.route_id = :routeId
+          AND t.trip_headsign = :direction
+          AND st.stop_id = :stopId
+          AND st.departure_time = :departureTime
+        LIMIT 1
+    """)
+    suspend fun findTripIdForStopAndTime(
+        routeId: String,
+        direction: String,
+        stopId: String,
+        departureTime: String
+    ): String?
+
+    @Query("""
+        SELECT stop_sequence
+        FROM stop_times
+        WHERE trip_id = :tripId
+          AND stop_id = :stopId
+        LIMIT 1
+    """)
+    suspend fun getStopSequenceInTrip(
+        tripId: String,
+        stopId: String
+    ): Int?
+
+    @Query("""
+        SELECT s.stop_name AS stop_name,
+               st.departure_time AS departure_time,
+               st.stop_sequence AS stop_sequence
+        FROM stop_times st
+        JOIN stop s ON s.stop_id = st.stop_id
+        WHERE st.trip_id = :tripId
+          AND st.stop_sequence >= :fromSeq
+        ORDER BY st.stop_sequence ASC
+    """)
+    suspend fun getPassagesFromSequence(
+        tripId: String,
+        fromSeq: Int
+    ): List<PassageRow>
 
 }
