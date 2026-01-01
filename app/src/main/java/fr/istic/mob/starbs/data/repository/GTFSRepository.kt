@@ -77,6 +77,11 @@ class GTFSRepository(private val db: AppDatabase) {
             db.stopTimeDao().getPassagesFromSequence(tripId, seq)
         }
 
+    suspend fun searchStops(query: String) =
+        withContext(Dispatchers.IO) { db.stopDao().searchStopsByName(query) }
+
+    suspend fun getRoutesForStopName(stopName: String) =
+        withContext(Dispatchers.IO) { db.stopDao().getRoutesAndDirectionsForStopName(stopName) }
 
 
 }

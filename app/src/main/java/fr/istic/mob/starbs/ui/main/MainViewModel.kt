@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.*
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -67,17 +68,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun registerReceiver() {
         val filter = IntentFilter(GTFSParserService.ACTION_PROGRESS)
-        getApplication<Application>().registerReceiver(
-            progressReceiver,
-            filter,
-            Context.RECEIVER_NOT_EXPORTED
-        )
+
+        val app = getApplication<Application>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            app.registerReceiver(progressReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            ContextCompat.registerReceiver(
+                app,
+                progressReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
     }
 
     fun unregisterReceiver() {
-        getApplication<Application>().unregisterReceiver(progressReceiver)
+        try {
+            getApplication<Application>().unregisterReceiver(progressReceiver)
+        } catch (_: IllegalArgumentException) {
+            // receiver not registered
+        }
     }
 }

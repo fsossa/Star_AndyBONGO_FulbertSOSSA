@@ -20,6 +20,7 @@ class GTFSParserService : IntentService("GTFSParserService") {
 
     private fun sendProgress(percent: Int, msg: String) {
         val intent = Intent(ACTION_PROGRESS)
+        intent.setPackage(packageName)
         intent.putExtra(EXTRA_PERCENT, percent)
         intent.putExtra(EXTRA_MESSAGE, msg)
         sendBroadcast(intent)

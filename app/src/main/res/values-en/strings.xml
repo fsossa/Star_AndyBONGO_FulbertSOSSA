@@ -18,4 +18,7 @@
     <string name="nom__arr">nom__arr</string>
     <string name="_12_34">12:34</string>
     <string name="passages_jusqu_au_terminus">Passages jusqu’au terminus</string>
+    <string name="search">Search stop</string>
+    <string name="rechercher_un_arr_t">Rechercher un arrêt...</string>
+    <string name="entrez_au_moins_3_caract_res">Entrez au moins 3 caractères</string>
 </resources>

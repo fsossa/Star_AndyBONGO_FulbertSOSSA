@@ -3,6 +3,8 @@ package fr.istic.mob.starbs.ui.main
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -48,12 +50,16 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.fragmentContainer, LoadingFragment())
             .commit()
 
+        ensureNotificationPermission()
         // Démarrer les services
         startDownload()
     }
 
     private val navListener = NavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
+            R.id.menu_home -> {
+                goHome()
+            }
             R.id.menu_reload -> {
                 forceReload()
             }
@@ -109,4 +115,51 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         viewModel.unregisterReceiver()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_toolbar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_search_stops -> {
+                supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                        R.anim.enter_from_right,
+                        R.anim.exit_to_left,
+                        R.anim.enter_from_left,
+                        R.anim.exit_to_right
+                    )
+                    .replace(R.id.fragmentContainer, SearchStopsFragment())
+                    .addToBackStack(null)
+                    .commit()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun goHome() {
+        supportFragmentManager.popBackStack(
+            null,
+            androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+        )
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, MainFragment())
+            .commit()
+    }
+
+    private fun ensureNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+            }
+        }
+    }
+
 }
