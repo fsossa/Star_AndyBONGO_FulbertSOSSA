@@ -51,7 +51,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _selectedTime.value = "%02d:%02d".format(h, min)
     }
 
-
+    private var receiverRegistered = false
     private val progressReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == GTFSParserService.ACTION_PROGRESS) {
@@ -92,5 +92,39 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } catch (_: IllegalArgumentException) {
             // receiver not registered
         }
+    }
+
+    fun forceUiProgress(percent: Int, msg: String) {
+        _progressPercent.value = percent
+        _progressMessage.value = msg
+        if (percent >= 100) _isReady.value = true
+    }
+
+    fun registerReceiverSafely() {
+        if (receiverRegistered) return
+
+        val filter = IntentFilter(GTFSParserService.ACTION_PROGRESS)
+        val app = getApplication<Application>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            app.registerReceiver(progressReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            ContextCompat.registerReceiver(
+                app,
+                progressReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
+
+        receiverRegistered = true
+    }
+
+    fun unregisterReceiverSafely() {
+        if (!receiverRegistered) return
+        val app = getApplication<Application>()
+        app.unregisterReceiver(progressReceiver)
+        receiverRegistered = false
     }
 }

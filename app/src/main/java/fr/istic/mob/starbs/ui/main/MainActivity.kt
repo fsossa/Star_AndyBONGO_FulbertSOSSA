@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -45,12 +46,26 @@ class MainActivity : AppCompatActivity() {
             if (it) showMainFragment()
         }
 
+        lifecycleScope.launch {
+            val empty = MainApp.repository.isDatabaseEmpty()
+
+            if (!empty) {
+                // DB déjà remplie -> on affiche directement
+                // viewModel.forceReady()
+                goHome()
+            } else {
+                // DB vide -> on télécharge/remplit
+                startDownload()
+            }
+        }
+
         // Charger l’écran de chargement
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, LoadingFragment())
             .commit()
 
         ensureNotificationPermission()
+        viewModel.registerReceiverSafely()
         // Démarrer les services
         startDownload()
     }
@@ -120,6 +135,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_toolbar_menu, menu)
         return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.unregisterReceiverSafely()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
