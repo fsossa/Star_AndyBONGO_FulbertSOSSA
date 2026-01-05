@@ -14,8 +14,8 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:title="@string/app_name"
+            android:background="#428EEC"
+            android:title="@string/star_bongo_sossa"
             android:titleTextColor="@android:color/white"
             app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
             app:navigationIcon="@drawable/ic_menu_24" />

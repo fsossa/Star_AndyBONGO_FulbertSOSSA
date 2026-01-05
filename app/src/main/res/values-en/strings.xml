@@ -21,4 +21,6 @@
     <string name="search">Search stop</string>
     <string name="rechercher_un_arr_t">Rechercher un arrêt...</string>
     <string name="entrez_au_moins_3_caract_res">Entrez au moins 3 caractères</string>
+    <string name="accueil">Home</string>
+    <string name="star_bongo_sossa">Star Bongo/Sossa</string>
 </resources>

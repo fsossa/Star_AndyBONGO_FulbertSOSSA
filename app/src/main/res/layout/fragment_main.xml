@@ -46,6 +46,8 @@
                         android:id="@+id/buttonSelectDate"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:backgroundTint="#428EEC"
+                        android:textColor="@color/white"
                         android:text="@string/choisir_une_date" />
                 </LinearLayout>
 
@@ -64,6 +66,8 @@
                         android:id="@+id/buttonSelectTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:backgroundTint="#428EEC"
+                        android:textColor="@color/white"
                         android:text="@string/choisir_l_heure" />
                 </LinearLayout>
 

@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/menu_home"
-        android:title="Accueil"
+        android:title="@string/accueil"
         android:icon="@drawable/ic_home_24" />
 
     <item
@@ -11,9 +11,9 @@
         android:title="@string/recharger_les_donn_es"
         android:icon="@android:drawable/ic_menu_rotate" />
 
-    <item
-        android:id="@+id/menu_about"
-        android:title="@string/propos"
-        android:icon="@android:drawable/ic_menu_info_details" />
+<!--    <item-->
+<!--        android:id="@+id/menu_about"-->
+<!--        android:title="@string/propos"-->
+<!--        android:icon="@android:drawable/ic_menu_info_details" />-->
 
 </menu>

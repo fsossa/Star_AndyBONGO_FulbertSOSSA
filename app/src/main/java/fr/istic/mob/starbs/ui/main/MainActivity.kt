@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         startDownload()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val navListener = NavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.menu_home -> {
