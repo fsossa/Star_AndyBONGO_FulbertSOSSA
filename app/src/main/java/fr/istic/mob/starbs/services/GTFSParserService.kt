@@ -63,18 +63,48 @@ class GTFSParserService : IntentService("GTFSParserService") {
                 // 2) Parse en streaming + batch inserts
                 sendProgress(35, "Remplissage des routes…")
                 routesEntry?.let { parseRoutes(zipFile, it) }
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Routes prêtes",
+                    "Insertion des routes dans la base terminée",
+                    6
+                )
 
                 sendProgress(55, "Remplissage des voyages…")
                 tripsEntry?.let { parseTrips(zipFile, it) }
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Voyages prêts",
+                    "Insertion des voyages dans la base terminée",
+                    7
+                )
 
                 sendProgress(70, "Remplissage des arrêts…")
                 stopsEntry?.let { parseStops(zipFile, it) }
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Arrêts prêts",
+                    "Insertion des arrêts dans la base terminée",
+                    8
+                )
 
                 sendProgress(82, "Remplissage du calendrier…")
                 calendarEntry?.let { parseCalendar(zipFile, it) }
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Calendrier prêt",
+                    "Insertion du calendrier dans la base terminée",
+                    9
+                )
 
                 sendProgress(90, "Remplissage des horaires…")
                 stopTimesEntry?.let { parseStopTimes(zipFile, it) }
+                NotificationUtils.notify(
+                    this@GTFSParserService,
+                    "Horaires prêts",
+                    "Insertion des horaires dans la base terminée",
+                    10
+                )
 
                 sendProgress(100, "Base GTFS prête")
 
@@ -82,7 +112,7 @@ class GTFSParserService : IntentService("GTFSParserService") {
                     this@GTFSParserService,
                     "Données prêtes",
                     "Base de données mise à jour",
-                    6
+                    3
                 )
             } catch (e: Exception) {
                 val err = "Erreur parsing : ${e.message}"

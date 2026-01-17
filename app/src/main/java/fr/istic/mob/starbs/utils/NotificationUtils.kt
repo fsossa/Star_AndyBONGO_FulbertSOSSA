@@ -29,7 +29,8 @@ object NotificationUtils {
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun notify(context: Context, title: String, message: String, id: Int) {
 
-        NotificationManagerCompat.from(context).cancelAll()
+
+        // NotificationManagerCompat.from(context).cancelAll()
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)

@@ -1,0 +1,147 @@
+package fr.istic.mob.starbs.ui.main
+
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.os.Bundle
+import android.view.*
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import fr.istic.mob.starbs.MainApp
+import fr.istic.mob.starbs.R
+import fr.istic.mob.starbs.databinding.FragmentMainBinding
+import fr.istic.mob.starbs.ui.components.setOnItemSelectedListener
+import kotlinx.coroutines.launch
+import java.util.*
+
+class MainFragment : Fragment() {
+
+    private lateinit var binding: FragmentMainBinding
+    private val viewModel: MainViewModel by activityViewModels()
+    private var selectedRouteId: String? = null
+
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentMainBinding.inflate(inflater, container, false)
+        binding.recyclerDirections.layoutManager = LinearLayoutManager(requireContext())
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupDatePicker()
+        setupTimePicker()
+        binding.buttonSelectDate.text = viewModel.selectedDate.value ?: "Choisir une date"
+        binding.buttonSelectTime.text = viewModel.selectedTime.value ?: "Choisir l'heure"
+        loadRoutes()     // <---- async
+    }
+
+    private fun setupDatePicker() {
+        binding.buttonSelectDate.setOnClickListener {
+            val cal = Calendar.getInstance()
+            DatePickerDialog(
+                requireContext(),
+                { _, y, m, d ->
+                    val date = "%02d/%02d/%04d".format(d, m + 1, y)
+                    binding.buttonSelectDate.text = date
+                    viewModel.setSelectedDate(date) //
+//                    binding.buttonSelectDate.text = "$d/${m + 1}/$y"
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+    }
+
+    private fun setupTimePicker() {
+        binding.buttonSelectTime.setOnClickListener {
+            val cal = Calendar.getInstance()
+            TimePickerDialog(
+                requireContext(),
+                { _, hour, min ->
+                    val time = "%02d:%02d".format(hour, min)
+                    binding.buttonSelectTime.text = time
+                    viewModel.setSelectedTime(time)
+//                    val h = hour.toString().padStart(2, '0')
+//                    val m = min.toString().padStart(2, '0')
+//                    binding.buttonSelectTime.text = "$h:$m"
+                },
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                true
+            ).show()
+        }
+    }
+
+    // -------------------------------------------------------
+    // Charger les lignes de bus (appel Repository suspend)
+    // -------------------------------------------------------
+    private fun loadRoutes() {
+        val repo = MainApp.repository
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val routes = repo.getAllRoutes()
+
+            val adapter = RouteSpinnerAdapter(requireContext(), routes)
+            binding.spinnerRoutes.adapter = adapter
+            // Quand une ligne est choisie, on chargera ses directions
+            binding.spinnerRoutes.setOnItemSelectedListener { _, _, position, _ ->
+                val route = routes[position]
+                selectedRouteId = route.route_id  // On stocke le vrai ID
+                loadDirections(route.route_id)
+            }
+//            binding.spinnerRoutes.setOnItemSelectedListener { _, _, position, _ ->
+//                val route = routes[position]
+//                loadDirections(route.route_id)
+//            }
+        }
+    }
+
+    // -------------------------------------------------------
+    // Charger les directions de la ligne sélectionnée
+    // -------------------------------------------------------
+    private fun loadDirections(routeId: String) {
+        val repo = MainApp.repository
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val directions = repo.getDirectionsForRoute(routeId)
+
+            val adapter = DirectionRecyclerAdapter(directions) { selectedDirection ->
+                openStopsFragment(selectedDirection)
+                println("Direction sélectionnée : $selectedDirection")
+            }
+
+            binding.recyclerDirections.adapter = adapter
+        }
+    }
+
+    private fun openStopsFragment(direction: String) {
+        val fragment = StopsFragment().apply {
+            arguments = bundleOf(
+                "routeId" to selectedRouteId,   //
+                "direction" to direction
+            )
+        }
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.enter_from_right,  // fragment entrant (forward)
+                R.anim.exit_to_left,      // fragment sortant (forward)
+                R.anim.enter_from_left,   // fragment entrant (back)
+                R.anim.exit_to_right      // fragment sortant (back)
+            )
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+
+}
